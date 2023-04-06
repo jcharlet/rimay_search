@@ -13,3 +13,4 @@ python-dotenv>=0.5.1
 langchain
 openai
 chromadb
+beautifulsoup4
