@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from src.data.scrap_website import scrap_page
+from src.data.scrap_website import scrap_page, collect_toc_links
 
 # write function to test scrap_website function in src/data/scrap_website.py checking outputs for a given url
 def test_scrap_page():
@@ -18,3 +18,15 @@ def test_scrap_page():
     assert extracted_data["documents"][0]["title"] == "1. Mindfulness : Plénitude de l’instant présent"
     
     assert extracted_data["documents"][0]["paragraphs"].startswith("\nLa mindfulness* ou\xa0pleine présence* est d’abord un état, l’état de présence* à l’instant")
+    
+# write function to test collect_toc_links function in src/data/scrap_website.py 
+def test_collect_toc_links():
+    # call collect_toc_links to get the output
+    links = collect_toc_links()
+    
+    # check that the output is a list
+    assert isinstance(links, list)
+    
+    # check that the output is a list of urls
+    assert len(links) > 0
+    assert links[0].startswith("https://www.openmindfulness.net/")
