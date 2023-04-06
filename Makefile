@@ -5,7 +5,7 @@
 #################################################################################
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
+BUCKET = bucket-private-jeremie/rimay_search
 PROFILE = default
 PROJECT_NAME = rimay_search
 PYTHON_INTERPRETER = python3
