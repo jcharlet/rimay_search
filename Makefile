@@ -23,7 +23,8 @@ endif
 ## Install Python Dependencies
 requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	# fix infinite loop with aws cli installation
+	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt --use-deprecated=legacy-resolver 
 
 ## Make Dataset
 data: requirements
