@@ -17,7 +17,7 @@ def test_scrap_page():
     assert len(extracted_data["documents"]) > 0
     assert extracted_data["documents"][0]["title"] == "1. Mindfulness : Plénitude de l’instant présent"
     
-    assert extracted_data["documents"][0]["paragraphs"].startswith("\nLa mindfulness* ou\xa0pleine présence* est d’abord un état, l’état de présence* à l’instant")
+    assert extracted_data["documents"][0]["contents"].startswith("\nLa mindfulness* ou\xa0pleine présence* est d’abord un état, l’état de présence* à l’instant")
     
 # write function to test collect_toc_links function in src/data/scrap_website.py 
 def test_collect_toc_links():
