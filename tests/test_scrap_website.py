@@ -28,5 +28,5 @@ def test_collect_toc_links():
     assert isinstance(links, list)
     
     # check that the output is a list of urls
-    assert len(links) > 0
+    assert len(links) == 146
     assert links[0].startswith("https://www.openmindfulness.net/")

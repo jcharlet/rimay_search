@@ -35,9 +35,10 @@ clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
 
-## Lint using flake8
-lint:
-	flake8 src
+## fix style with black, Lint using flake8
+style:
+	black src
+	flake8 src --max-line-length=88
 
 ## Upload Data to S3
 sync_data_to_s3:
