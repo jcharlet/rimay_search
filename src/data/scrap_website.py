@@ -4,25 +4,52 @@ import pandas as pd
 import click
 import logging
 from pathlib import Path
+from tqdm import tqdm
 
 log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_fmt)
 logger = logging.getLogger(__name__)
 
-# FIXME I should scrap the pages and save them locally once and for all, and then run soup parser on the local files
+current_file_path = str(Path(__file__).resolve().parents[2])
+
+def retrieve_page(url):
+    """Retrieve a page contents from openmindfulness.net
+    Check in local folder if the page is already downloaded, otherwise download it and save it locally
+
+    Args:
+        url (str): page url
+        
+    Returns:
+        page_contents (str): page contents
+        page_chapter (str): page chapter description
+    """
+    # check if the page is already downloaded
+    page_chapter = url.split("/")[-2]
+    page_file = Path(f"{current_file_path}/data/raw/html_pages/{page_chapter}.html")
+    if page_file.exists():
+        logger.info(f"Page {page_chapter} already downloaded")
+        with open(page_file, 'r') as f:
+            page_contents = f.read()
+    else:
+        logger.info(f"Downloading page {page_chapter}")
+        # Make a GET request to the website
+        response = requests.get(url)
+        page_contents = response.content
+        
+        with open(page_file, 'wb+') as f:
+            f.write(page_contents)
+    return page_contents, page_chapter
 
 def scrap_page(url):
     """
-    Scrap a website page from openmindfulness.net and return the json document containing all contents in a structured format
+    Scrap a website page from openmindfulness.net and return a json document containing all contents in a structured format
     """
-    # Make a GET request to the website
-    response = requests.get(url)
-
-    page_chapter = url.split("/")[-2]
+    page_contents, page_chapter = retrieve_page(url)
+    logger.info(f"Parsing page {page_chapter}")
 
     page_doc = {'url': url, 'page_chapter': page_chapter}
     # Parse the HTML content using Beautiful Soup
-    soup = BeautifulSoup(response.content, "html.parser")
+    soup = BeautifulSoup(page_contents, "html.parser")
     
     page_doc['page_title'] = extract_page_title(soup)
     
@@ -37,11 +64,21 @@ def scrap_page(url):
 def extract_documents_from_wrapper_div(soup, documents: list[dict]):
     for element in soup.find_all("div",class_="wpb_wrapper"):
         contents = ""
-        if element.name == "div":
-            continue
-        else:
-            contents.append(element.text)
-        documents.append({"contents": contents})
+        for child in element.children:
+            if child.name in ["p","ul", "ol", "table"]:
+                # Add the paragraph text to the string variable
+                contents += child.text
+            elif child == "\n":
+                # Add the line break to the string variable
+                contents += child
+            elif child.name == "div":
+                # break all for loops
+                break
+            else:
+                logger.warn(f"unmanaged sibling: {child.name}, {child.text}")
+                break
+        if contents not in ['', '\n']:
+            documents.append({"contents": contents})
     return documents
 
 def extract_page_title(soup):
@@ -100,14 +137,11 @@ def collect_toc_links():
 
     links = []
 
-    # Make a GET request to the website
-    response = requests.get(url)
-
-    page_chapter = url.split("/")[-2]
+    page_contents, page_chapter = retrieve_page(url)
 
     page_doc = {'url': url, 'page_chapter': page_chapter}
     # Parse the HTML content using Beautiful Soup
-    soup = BeautifulSoup(response.content, "html.parser")
+    soup = BeautifulSoup(page_contents, "html.parser")
 
 
     # go through all links in the page
@@ -138,7 +172,8 @@ def scrap_website():
     # scrap each page
     documents = []
     # counter = 0 # for debugging purposes
-    for link in links:
+    
+    for link in tqdm(links):
         # if counter==10:
             # break
         documents.append(scrap_page(link))
@@ -149,11 +184,11 @@ def scrap_website():
 
 
 @click.command()
-@click.argument('output_filepath', type=click.Path(), default="data/interim/openmindfulness_contents.csv")
-def scrap_website_and_store_contents(output_filepath):
+def scrap_website_and_store_contents():
     """ Runs data processing scripts to scrap data from openmindfulness website and store them into
-        a json file (saved in ../interim).
+        a csv file (saved in data/interim/openmindfulness_contents.csv).
     """
+    output_filepath = f"{current_file_path}/data/interim/openmindfulness_contents.csv"
     logger.info('scraping openmindfulness website')
     documents = scrap_website()
     logger.info('saving scraped data into json file')
@@ -163,8 +198,4 @@ def scrap_website_and_store_contents(output_filepath):
 
 
 if __name__ == '__main__':
-    # not used in this stub but often useful for finding various files
-    project_dir = Path(__file__).resolve().parents[2]
-
-
     scrap_website_and_store_contents()
