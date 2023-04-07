@@ -26,9 +26,9 @@ requirements: test_environment
 	# fix infinite loop with aws cli installation
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt --use-deprecated=legacy-resolver 
 
-## Make Dataset
+## scrap website
 data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+	$(PYTHON_INTERPRETER) src/data/scrap_website.py 
 
 ## Delete all compiled Python files
 clean:

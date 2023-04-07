@@ -191,10 +191,18 @@ def scrap_website_and_store_contents():
     output_filepath = f"{current_file_path}/data/interim/openmindfulness_contents.csv"
     logger.info('scraping openmindfulness website')
     documents = scrap_website()
-    logger.info('saving scraped data into json file')
+    
+    
+    logger.info('cleaning outputs')
     df = pd.DataFrame(documents).explode('documents').reset_index()
     df = pd.concat([df,pd.json_normalize(df['documents'])],axis=1)
-    df.to_csv(output_filepath)
+    del df['documents']
+    
+    # add a counter column to keep track of the order of the documents for each unique page_chapter
+    df['counter'] = df.groupby('page_chapter').cumcount()+1
+    
+    logger.info('saving scraped data into json file')
+    df.to_csv(output_filepath, index=None)
 
 
 if __name__ == '__main__':
