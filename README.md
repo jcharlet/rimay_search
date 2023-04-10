@@ -3,6 +3,25 @@ rimay_search
 
 search over Rimay teachings using natural language
 
+
+TODO
+------------
+- [ ] collect data
+    - [x] scrap website
+    - [x] clean data (balanced articles in text length)
+- [ ] build qa search
+    - [x] prototype
+    - [ ] applied to sample
+        - [ ] evaluation
+        - [ ] iteration 1
+        - [ ] iteration 2
+    - [ ] running on whole dataset
+        - [ ] evaluation
+- [ ] build UI
+    - [ ] built it with streamlit
+    - [ ] deploy on hugging face spaces
+- [ ] write article 
+
 Project Organization
 ------------
 
