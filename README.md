@@ -11,7 +11,12 @@ TODO
     - [x] clean data (balanced articles in text length)
 - [ ] build qa search
     - [x] prototype
-    - [ ] applied to sample
+    - [x] applied to sample
+        - [x] debug
+          - [x] texts too long: need samples of max 1200 chars to follow openai
+          This model's maximum context length is 4097 tokens, however you requested 9779 tokens (9523 in your prompt; 256 for the completion). Please reduce your prompt; or completion length
+            - [NO] either reduce text size to 1200 chars as in langchain prompt (while I have a series of texts with 600 - 1200 tokens)
+            - [x] or change architecture: QA to every match and combine, rather than QA on all matches in 1 prompt: map_reduce and map_ranks
         - [ ] evaluation
         - [ ] iteration 1
         - [ ] iteration 2

@@ -63,8 +63,9 @@ def embed_dataset(
     )
     df = pd.read_csv(input_filepath)
     df = df[(df.sort_chapter == 3) & (df.sort_step_nb == 5)]
-
-    metadatas = df[
+    df['source']=df['id']
+    
+    metadatas = eval(df[
         [
             "sort_chapter",
             "sort_step_nb",
@@ -74,13 +75,15 @@ def embed_dataset(
             "contents_to_embed_length",
             "contents_to_embed",
             "url",
+            "source"
         ]
-    ].to_json(orient="records")
+    ].to_json(orient="records"))
 
     collection = Chroma.from_texts(
         df.contents_to_embed.values.tolist(),
         embeddings,
         metadatas=metadatas,
+        ids=df.id.values.tolist(),
         client_settings=client_settings,
         collection_name=collection_name,
         persist_directory=persist_directory,
@@ -114,8 +117,11 @@ def run_query_with_qa_with_sources(query: str, collection_name=COL_OPENMINDFULNE
 
     chain = RetrievalQAWithSourcesChain.from_chain_type(
         OpenAI(temperature=0),
-        chain_type="stuff",
+        # chain_type="stuff", # cannot work with large documents
+        chain_type="map_reduce", # runs a lot of queries under the hood..
+        # chain_type="map_rerank", # does not provide sources
         retriever=docsearch.as_retriever(),
+        # verbose=True,
     )
     return chain(
         {"question": query},
