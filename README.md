@@ -17,6 +17,10 @@ TODO
           This model's maximum context length is 4097 tokens, however you requested 9779 tokens (9523 in your prompt; 256 for the completion). Please reduce your prompt; or completion length
             - [NO] either reduce text size to 1200 chars as in langchain prompt (while I have a series of texts with 600 - 1200 tokens)
             - [x] or change architecture: QA to every match and combine, rather than QA on all matches in 1 prompt: map_reduce and map_ranks
+            - [x] increase response size on demand
+            - [X] track cost
+            - [ ] make sure to respond in French
+            - [ ] get url, chapter and everything from source returned into chromadb
         - [ ] evaluation
         - [ ] iteration 1
         - [ ] iteration 2
@@ -26,6 +30,21 @@ TODO
     - [ ] built it with streamlit
     - [ ] deploy on hugging face spaces
 - [ ] write article 
+
+
+Documentation
+------------
+Retrieval question answering with sources based on [langchain dedicated tutorial](https://python.langchain.com/en/latest/modules/chains/index_examples/vector_db_qa_with_sources.html)
+Explanation of different kinds of chain (stuffing, map_reduce, refine, map_rerank), to deal with long queries to open_ai: in [langchain](https://python.langchain.com/en/latest/modules/chains/index_examples/qa_with_sources.html), but also in this [excellent video](https://www.youtube.com/watch?v=), and this [cookbook](https://github.com/gkamradt/langchain-tutorials/blob/main/LangChain%20Cookbook.ipynb)
+
+
+
+Setup
+------------
+You will need to create a .env file and put your openai token
+
+Warning: running some of the unit tests can be quickly costly - a qa search query on the state of the union costs 6cents, a qa search query on the open mindfulness contents can cost 40cents
+
 
 Project Organization
 ------------

@@ -1,7 +1,7 @@
 import pytest
 import logging
 from bs4 import BeautifulSoup
-from src.models.predict_model import embed_dataset, embed_dataset_state_of_the_union, run_similarity_search, run_query_with_qa_with_sources, COL_STATE_OF_THE_UNION, COL_OPENMINDFULNESS
+from src.models.predict_model import embed_dataset, embed_dataset_state_of_the_union, run_similarity_search, run_query_with_qa_with_sources, COL_STATE_OF_THE_UNION, COL_OPENMINDFULNESS, ResponseSize
 import pandas as pd
 from pathlib import Path
 
@@ -32,13 +32,15 @@ def test_run_query_with_qa_with_sources_on_state_of_the_union():
     
     # when I ask a question
     response = run_query_with_qa_with_sources(question, collection_name=COL_STATE_OF_THE_UNION)
+    # response = run_query_with_qa_with_sources(question, response_size=ResponseSize.LARGE, collection_name=COL_STATE_OF_THE_UNION)
     
     # then I expect the correct answer to be returned, using the right source
     assert response['sources'] == '31-pl', "expected source found"
     
     # cannot make an exact text comparison because the answer can vary - however it should like this:
     print(response['answer'])
-    # assert response['answer'] == 'The president honored Justice Breyer for his service and mentioned his legacy of excellence.\n', "expected answer to our question"
+    # The president said "Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service
+    # The president honored Justice Breyer for his service and mentioned his legacy of excellence.\n
 
 def test_embedding_and_qa_query():
     # When I embed a sample of our dataset
@@ -47,6 +49,7 @@ def test_embedding_and_qa_query():
     # and I ask a question
     question = "Comment intégrer ses émotions avec la méthode en trois temps ?"
     response = run_query_with_qa_with_sources(question)
+    # response = run_query_with_qa_with_sources(question, response_size=ResponseSize.LARGE)
 
     # then I expect the correct answer to be returned, using the right source
     print(response['answer'])     # cannot make an exact text comparison because the answer can vary

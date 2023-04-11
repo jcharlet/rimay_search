@@ -11,6 +11,9 @@ from pathlib import Path
 import logging
 from typing import Any, Dict, List, Optional
 import click
+from langchain.callbacks import get_openai_callback
+from enum import Enum, unique
+
 
 load_dotenv(find_dotenv())
 
@@ -137,15 +140,38 @@ def run_similarity_search(query: str, collection_name: str =COL_OPENMINDFULNESS)
     logger.info(response)
     return response
 
+@unique
+class ResponseSize(int, Enum):
+    SMALL = 256
+    MEDIUM = 512
+    LARGE = 1024
 
-@cli.command()
-@click.argument('query', type=str)
-@click.argument('collection_name', type=str)
-def run_query_with_qa_with_sources(query: str, collection_name: str = COL_OPENMINDFULNESS) -> Dict[str, Any]:
+def get_tokens_limits(response_size : ResponseSize) -> tuple[int, int]:
+    if response_size == ResponseSize.SMALL:
+        max_response_tokens = 256
+        max_tokens_limit_for_chain = 3375
+    elif response_size == ResponseSize.MEDIUM:
+        max_response_tokens = 512
+        max_tokens_limit_for_chain = 3375-256
+    elif response_size == ResponseSize.LARGE:
+        max_response_tokens = 1024
+        max_tokens_limit_for_chain = 3375-768
+    return max_response_tokens, max_tokens_limit_for_chain    
+
+# FIXME function does not work in unit test with response_size and collection_name arguments: raise TypeError(f"unexpected keyword argument {k}") from click and couldn't solve that - disabling click command for now
+# @cli.command()
+# @click.argument('query', type=str)
+# @click.argument('response_size', type=str, default=ResponseSize.SMALL.name)
+# @click.argument('collection_name', type=str, default=COL_OPENMINDFULNESS)
+def run_query_with_qa_with_sources(query: str, response_size : ResponseSize = ResponseSize.SMALL , collection_name: str = COL_OPENMINDFULNESS) -> Dict[str, Any]:
+
     """ run query with openai QA
 
     Args:
         query (str): the question to ask
+
+        response_size (str, optional): the size of the response. Defaults to SMALL
+
         collection_name (str, optional): chromadb collection name to query
 
     Returns:
@@ -158,19 +184,34 @@ def run_query_with_qa_with_sources(query: str, collection_name: str = COL_OPENMI
         embedding_function=embeddings,
         client_settings=client_settings,
     )
-
+    max_response_tokens, max_tokens_limit_for_chain = get_tokens_limits(response_size)
+    
     chain = RetrievalQAWithSourcesChain.from_chain_type(
-        OpenAI(temperature=0),
+        OpenAI(
+            temperature=0, 
+            max_tokens=max_response_tokens # default 256
+            ),
         # chain_type="stuff", # cannot work with large documents
         chain_type="map_reduce",  # runs a lot of queries under the hood..
         # chain_type="map_rerank", # does not provide sources
         retriever=docsearch.as_retriever(),
         # verbose=True,
+        reduce_k_below_max_tokens = True, # default False
+        max_tokens_limit = max_tokens_limit_for_chain  # maximum total context length for openai request is 4097 tokens. default 3375
     )
-    response = chain(
-        {"question": query},
-        return_only_outputs=True,
-    )
+    
+    with get_openai_callback() as cb:
+        response = chain(
+            {"question": query},
+            return_only_outputs=True,
+        )
+        
+        logger.info(f"Total Tokens: {cb.total_tokens}")
+        logger.info(f"Prompt Tokens: {cb.prompt_tokens}")
+        logger.info(f"Completion Tokens: {cb.completion_tokens}")
+        logger.info(f"Successful Requests: {cb.successful_requests}")
+        logger.info(f"Total Cost (USD): ${cb.total_cost}")
+        
     logger.info(response)
     return response
 
