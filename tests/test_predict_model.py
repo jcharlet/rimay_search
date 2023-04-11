@@ -37,6 +37,7 @@ def test_run_query_with_qa_with_sources_on_state_of_the_union():
     assert response['sources'] == '31-pl', "expected source found"
     
     # cannot make an exact text comparison because the answer can vary - however it should like this:
+    print(response['answer'])
     # assert response['answer'] == 'The president honored Justice Breyer for his service and mentioned his legacy of excellence.\n', "expected answer to our question"
 
 def test_embedding_and_qa_query():
@@ -48,8 +49,7 @@ def test_embedding_and_qa_query():
     response = run_query_with_qa_with_sources(question)
 
     # then I expect the correct answer to be returned, using the right source
-
-    # assert reponse['sources'] equals array ['3.5.20.01, 3.5.20.02, 3.5.24.01, 3.5.20.03']
+    print(response['answer'])     # cannot make an exact text comparison because the answer can vary
     assert list(sorted(response['sources'].split(", "))) == sorted(
         ['3.5.20.01', '3.5.20.02', '3.5.24.01', '3.5.20.03']
     )
