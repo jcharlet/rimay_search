@@ -9,7 +9,7 @@ import pandas as pd
 from dotenv import find_dotenv, load_dotenv
 from pathlib import Path
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 import click
 from langchain.callbacks import get_openai_callback
 from enum import Enum, unique
@@ -18,7 +18,7 @@ from enum import Enum, unique
 load_dotenv(find_dotenv())
 
 COL_STATE_OF_THE_UNION = "state_of_the_union"
-COL_OPENMINDFULNESS = "openmindfulness_contents"
+COL_OPEN_MINDFULNESS = "openmindfulness_contents"
 
 project_dir = Path(__file__).resolve().parents[2]
 
@@ -36,88 +36,140 @@ logger = logging.getLogger(__name__)
 def cli():
     pass
 
-def embed_dataset_state_of_the_union(
-    input_filepath: str =f"{project_dir}/data/external/state_of_the_union.txt",
+
+def _embed_dataset(
+    collection_name: str,
+    texts: List[str],
+    metadatas: List[Dict[str, Any]],
+    ids: List[str],
 ) -> Chroma:
-    """
-    embed dataset state of the union with openai embeddings and Chroma DB
-    (for testing purpose)
-    """
-    logger.info(
-        "Embedding dataset with openai embeddings "
-        + "on collection {COL_STATE_OF_THE_UNION}"
-    )
-    state_of_the_union = Path(input_filepath).read_text()
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_text(state_of_the_union)
-
-    collection = Chroma.from_texts(
-        texts,
-        embeddings,
-        metadatas=[{"source": f"{i}-pl"} for i in range(len(texts))],
-        client_settings=client_settings,
-        collection_name=COL_STATE_OF_THE_UNION,
-        persist_directory=persist_directory,
-    )
-    collection.persist()
-
-    return collection
-
-
-@cli.command()
-@click.argument('input_filepath', type=str)
-@click.argument('collection_name', type=str)
-def embed_dataset(
-    input_filepath: str =f"{project_dir}/data/processed/openmindfulness_contents.csv",
-    collection_name: str =COL_OPENMINDFULNESS,
-) -> Chroma:
-    """embed dataset with openai embeddings and Chroma DB
+    """Embed dataset with OpenAI embeddings and Chroma DB.
 
     Args:
-        input_filepath (str, optional): filepath of dataset to embed. Defaults to f"{project_dir}/data/processed/openmindfulness_contents.csv".
-        collection_name (str, optional): chromadb collection name. Defaults to COL_OPENMINDFULNESS.
+        input_filepath (str): Filepath of the dataset to embed.
+        collection_name (str): Name of the Chroma DB collection to create.
+        texts (List[str]): List of texts to embed.
+        metadatas (List[Dict[str, Any]]): List of metadata dictionaries.
 
     Returns:
-        Chroma: Chroma DB collection
+        Chroma: Chroma DB collection.
     """
     logger.info(
-        f"Embedding dataset with openai embeddings on collection {collection_name}"
-    )
-    df = pd.read_csv(input_filepath)
-    df = df[(df.sort_chapter == 3) & (df.sort_step_nb == 5)]
-    df["source"] = df["id"]
-
-    metadatas = eval(
-        df[
-            [
-                "sort_chapter",
-                "sort_step_nb",
-                "sort_section_nb",
-                "sort_paragraph_nb",
-                "page_title",
-                "contents_to_embed_length",
-                "contents_to_embed",
-                "url",
-                "source",
-            ]
-        ].to_json(orient="records")
+        f"Embedding dataset with OpenAI embeddings on collection {collection_name}"
     )
 
-    collection = Chroma.from_texts(
-        df.contents_to_embed.values.tolist(),
-        embeddings,
-        metadatas=metadatas,
-        ids=df.id.values.tolist(),
-        client_settings=client_settings,
-        collection_name=collection_name,
-        persist_directory=persist_directory,
-    )
-    collection.persist()
+    # Delete existing collection.
+    try:
+        collection = Chroma(
+            client_settings=client_settings,
+            collection_name=collection_name,
+            persist_directory=persist_directory,
+        )
+        collection.delete_collection()
+        logger.info(f"Deleted collection {collection_name}")
+    except Exception as e:
+        logger.error(
+            f"Error while deleting collection {collection_name}", e, stack_info=True
+        )
+
+    with get_openai_callback() as cb:
+        # Create new collection.
+        collection = Chroma.from_texts(
+            texts,
+            embeddings,
+            metadatas=metadatas,
+            ids=ids,
+            client_settings=client_settings,
+            collection_name=collection_name,
+            persist_directory=persist_directory,
+        )
+        collection.persist()
+        logger.info(f"Created collection {collection_name}")
+
+        metadata = {
+            "cost": {
+                "Total Cost (USD)": cb.total_cost,
+                "Successful Requests": cb.successful_requests,
+            },
+            "tokens": {
+                "Total Tokens": cb.total_tokens,
+                "Prompt Tokens": cb.prompt_tokens,
+                "Completion Tokens": cb.completion_tokens,
+            },
+        }
+        logger.info(metadata)
 
     return collection
 
 
-def run_similarity_search(query: str, collection_name: str =COL_OPENMINDFULNESS) -> list[Document]:
+# @cli.command()
+# @click.argument('collection_name', type=str)
+def embed_dataset(collection_name: str):
+    assert collection_name in [COL_STATE_OF_THE_UNION, COL_OPEN_MINDFULNESS]
+    if collection_name == COL_STATE_OF_THE_UNION:
+        state_of_the_union = Path(
+            f"{project_dir}/data/external/state_of_the_union.txt"
+        ).read_text()
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        texts = text_splitter.split_text(state_of_the_union)
+        metadata = [{"source": f"{i}-pl"} for i in range(len(texts))]
+        ids = None
+        collection_name = COL_STATE_OF_THE_UNION
+
+    elif collection_name == COL_OPEN_MINDFULNESS:
+        df = pd.read_csv(f"{project_dir}/data/processed/openmindfulness_contents.csv")
+        # df = df[(df.sort_chapter == 3) & (df.sort_step_nb == 5)]
+        df["source"] = df["id"]
+        texts = df.contents_to_embed.values.tolist()
+        metadata = eval(
+            df[
+                [
+                    "sort_chapter",
+                    "sort_step_nb",
+                    "sort_section_nb",
+                    "sort_paragraph_nb",
+                    "page_title",
+                    "contents_to_embed_length",
+                    "contents_to_embed",
+                    "url",
+                    "source",
+                ]
+            ].to_json(orient="records")
+        )
+        ids = df.id.values.tolist()
+
+    return _embed_dataset(collection_name, texts, metadata, ids)
+
+
+def get_doc_by_id(id: str, collection_name: str = COL_OPEN_MINDFULNESS) -> dict:
+    """Get document by id from embedded collection.
+
+    Args:
+        id (str): document id
+
+    Returns:
+        dict: if existing, dict document of the given id.
+    """
+    collection = Chroma(
+        collection_name=collection_name,
+        embedding_function=embeddings,
+        client_settings=client_settings,
+    )
+    results = collection._collection.get(id)
+    if results["ids"] == []:
+        return None
+    doc = {
+        "id": results["ids"][0],
+        "document": results["documents"][0],
+        "metadata": results["metadatas"][0],
+    }
+    doc["metadata"]["url"] = doc["metadata"]["url"].replace("\\", "")
+    return doc
+
+
+def run_similarity_search(
+    query: str, collection_name: str = COL_OPEN_MINDFULNESS
+) -> list[Document]:
     """run similarity search with openai embeddings
 
     Args:
@@ -140,32 +192,40 @@ def run_similarity_search(query: str, collection_name: str =COL_OPENMINDFULNESS)
     logger.info(response)
     return response
 
+
 @unique
 class ResponseSize(int, Enum):
     SMALL = 256
     MEDIUM = 512
     LARGE = 1024
 
-def get_tokens_limits(response_size : ResponseSize) -> tuple[int, int]:
+
+def get_tokens_limits(response_size: ResponseSize) -> tuple[int, int]:
     if response_size == ResponseSize.SMALL:
         max_response_tokens = 256
         max_tokens_limit_for_chain = 3375
     elif response_size == ResponseSize.MEDIUM:
         max_response_tokens = 512
-        max_tokens_limit_for_chain = 3375-256
+        max_tokens_limit_for_chain = 3375 - 256 - 100
     elif response_size == ResponseSize.LARGE:
         max_response_tokens = 1024
-        max_tokens_limit_for_chain = 3375-768
-    return max_response_tokens, max_tokens_limit_for_chain    
+        max_tokens_limit_for_chain = 3375 - 768 - 100
+    return max_response_tokens, max_tokens_limit_for_chain
 
-# FIXME function does not work in unit test with response_size and collection_name arguments: raise TypeError(f"unexpected keyword argument {k}") from click and couldn't solve that - disabling click command for now
+
+# FIXME function does not work in unit test with response_size and collection_name
+# arguments: raise TypeError(f"unexpected keyword argument {k}") from click and
+# couldn't solve that - disabling click command for now
 # @cli.command()
 # @click.argument('query', type=str)
 # @click.argument('response_size', type=str, default=ResponseSize.SMALL.name)
 # @click.argument('collection_name', type=str, default=COL_OPENMINDFULNESS)
-def run_query_with_qa_with_sources(query: str, response_size : ResponseSize = ResponseSize.SMALL , collection_name: str = COL_OPENMINDFULNESS) -> Dict[str, Any]:
-
-    """ run query with openai QA
+def run_query_with_qa_with_sources(
+    query: str,
+    response_size: ResponseSize = ResponseSize.SMALL,
+    collection_name: str = COL_OPEN_MINDFULNESS,
+) -> Dict[str, Any]:
+    """run query with openai QA
 
     Args:
         query (str): the question to ask
@@ -185,37 +245,46 @@ def run_query_with_qa_with_sources(query: str, response_size : ResponseSize = Re
         client_settings=client_settings,
     )
     max_response_tokens, max_tokens_limit_for_chain = get_tokens_limits(response_size)
-    
+
     chain = RetrievalQAWithSourcesChain.from_chain_type(
-        OpenAI(
-            temperature=0, 
-            max_tokens=max_response_tokens # default 256
-            ),
+        OpenAI(temperature=0, max_tokens=max_response_tokens),  # default 256
         # chain_type="stuff", # cannot work with large documents
         chain_type="map_reduce",  # runs a lot of queries under the hood..
         # chain_type="map_rerank", # does not provide sources
         retriever=docsearch.as_retriever(),
         # verbose=True,
-        reduce_k_below_max_tokens = True, # default False
-        max_tokens_limit = max_tokens_limit_for_chain  # maximum total context length for openai request is 4097 tokens. default 3375
+        reduce_k_below_max_tokens=True,  # default False
+        max_tokens_limit=max_tokens_limit_for_chain,
+        # maximum total context length for openai request is 4097 tokens. default 3375
     )
-    
+
     with get_openai_callback() as cb:
         response = chain(
             {"question": query},
             return_only_outputs=True,
         )
-        
-        logger.info(f"Total Tokens: {cb.total_tokens}")
-        logger.info(f"Prompt Tokens: {cb.prompt_tokens}")
-        logger.info(f"Completion Tokens: {cb.completion_tokens}")
-        logger.info(f"Successful Requests: {cb.successful_requests}")
-        logger.info(f"Total Cost (USD): ${cb.total_cost}")
-        
-    logger.info(response)
-    return response
 
-if __name__ == '__main__':
+        answer = response["answer"]
+        sources = response["sources"]
+
+        metadata = {
+            "cost": {
+                "Total Cost (USD)": cb.total_cost,
+                "Successful Requests": cb.successful_requests,
+            },
+            "tokens": {
+                "Total Tokens": cb.total_tokens,
+                "Prompt Tokens": cb.prompt_tokens,
+                "Completion Tokens": cb.completion_tokens,
+            },
+        }
+        logger.info(metadata)
+
+    logger.info(response)
+    return answer, sources, metadata
+
+
+if __name__ == "__main__":
     log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=log_fmt)
     logging.getLogger("chromadb").setLevel(logging.WARN)

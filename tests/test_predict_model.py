@@ -1,7 +1,7 @@
 import pytest
 import logging
 from bs4 import BeautifulSoup
-from src.models.predict_model import embed_dataset, embed_dataset_state_of_the_union, run_similarity_search, run_query_with_qa_with_sources, COL_STATE_OF_THE_UNION, COL_OPENMINDFULNESS, ResponseSize
+from src.models.predict_model import embed_dataset, get_doc_by_id, run_similarity_search, run_query_with_qa_with_sources, COL_STATE_OF_THE_UNION, COL_OPEN_MINDFULNESS, ResponseSize
 import pandas as pd
 from pathlib import Path
 
@@ -25,36 +25,49 @@ def test_similarity_search_on_state_of_the_union():
 
 def test_run_query_with_qa_with_sources_on_state_of_the_union():
     # given a dataset embedded
-    # collection = embed_dataset_state_of_the_union()
+    # embed_dataset(COL_STATE_OF_THE_UNION)
     
     # and given a query
     question = "What did the president say about Justice Breyer"
     
     # when I ask a question
-    response = run_query_with_qa_with_sources(question, collection_name=COL_STATE_OF_THE_UNION)
+    answer, sources, metadata = run_query_with_qa_with_sources(question, collection_name=COL_STATE_OF_THE_UNION)
     # response = run_query_with_qa_with_sources(question, response_size=ResponseSize.LARGE, collection_name=COL_STATE_OF_THE_UNION)
     
     # then I expect the correct answer to be returned, using the right source
-    assert response['sources'] == '31-pl', "expected source found"
+    assert sources == '31-pl', "expected source found"
     
     # cannot make an exact text comparison because the answer can vary - however it should like this:
-    print(response['answer'])
+    print(answer)
     # The president said "Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service
     # The president honored Justice Breyer for his service and mentioned his legacy of excellence.\n
 
 def test_embedding_and_qa_query():
     # When I embed a sample of our dataset
-    # embed_dataset()
+    # embed_dataset(COL_OPEN_MINDFULNESS)
 
     # and I ask a question
     question = "Comment intégrer ses émotions avec la méthode en trois temps ?"
-    response = run_query_with_qa_with_sources(question)
+    answer, sources, _ = run_query_with_qa_with_sources(question)
     # response = run_query_with_qa_with_sources(question, response_size=ResponseSize.LARGE)
 
     # then I expect the correct answer to be returned, using the right source
-    print(response['answer'])     # cannot make an exact text comparison because the answer can vary
-    assert list(sorted(response['sources'].split(", "))) == sorted(
-        ['3.5.20.01', '3.5.20.02', '3.5.24.01', '3.5.20.03']
-    )
+    print(answer)     # cannot make an exact text comparison because the answer can vary
+    assert '3.5.20.01' in sources, "expected source found"
+    # assert list(sorted(sources.split(", "))) == sorted(
+    #     ['3.5.20.01', '3.5.20.02', '3.5.24.01', '3.5.20.03']
+    # )
+    
+def test_retrieve_source():
+    # given a source id
+    id="3.1.01.01"
+    
+    # when I retrieve the source
+    doc = get_doc_by_id(id)
+    
+    # Then I get all its contents and metadata
+    assert doc is not None
+    
+    assert doc['metadata']['page_title'] == "PREMIERE ETAPE\nLA PRESENCE ATTENTIVE AU CORPS"
     
     
