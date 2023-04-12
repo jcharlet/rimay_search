@@ -66,6 +66,7 @@ def _embed_dataset(
             persist_directory=persist_directory,
         )
         collection.delete_collection()
+        collection.persist()
         logger.info(f"Deleted collection {collection_name}")
     except Exception as e:
         logger.error(
@@ -113,7 +114,7 @@ def embed_dataset(collection_name: str):
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         texts = text_splitter.split_text(state_of_the_union)
         metadata = [{"source": f"{i}-pl"} for i in range(len(texts))]
-        ids = None
+        ids = [f"{i}-pl" for i in range(len(texts))]
         collection_name = COL_STATE_OF_THE_UNION
 
     elif collection_name == COL_OPEN_MINDFULNESS:
@@ -130,7 +131,6 @@ def embed_dataset(collection_name: str):
                     "sort_paragraph_nb",
                     "page_title",
                     "contents_to_embed_length",
-                    "contents_to_embed",
                     "url",
                     "source",
                 ]
@@ -163,7 +163,8 @@ def get_doc_by_id(id: str, collection_name: str = COL_OPEN_MINDFULNESS) -> dict:
         "document": results["documents"][0],
         "metadata": results["metadatas"][0],
     }
-    doc["metadata"]["url"] = doc["metadata"]["url"].replace("\\", "")
+    if "url" in doc["metadata"].keys():
+        doc["metadata"]["url"] = doc["metadata"]["url"].replace("\\", "")
     return doc
 
 
@@ -265,8 +266,9 @@ def run_query_with_qa_with_sources(
         )
 
         answer = response["answer"]
-        sources = response["sources"]
-
+        
+        sources = list(sorted(response["sources"].split(", ")))
+        sources = [get_doc_by_id(source, collection_name=collection_name) for source in sources]
         metadata = {
             "cost": {
                 "Total Cost (USD)": cb.total_cost,

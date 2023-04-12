@@ -7,6 +7,8 @@ from pathlib import Path
 
 project_path = str(Path(__file__).resolve().parents[1])
 
+logger = logging.getLogger(__name__)
+
 @pytest.fixture(scope="session", autouse=True)
 def execute_before_any_test():
     log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -14,7 +16,7 @@ def execute_before_any_test():
 
 def test_similarity_search_on_state_of_the_union():
     # given a dataset embedded
-    # collection = embed_dataset_state_of_the_union()
+    # embed_dataset(COL_STATE_OF_THE_UNION)
     
     # when I search for a paragraph with similarity search
     response = run_similarity_search("What did the president say about Justice Breyer", collection_name=COL_STATE_OF_THE_UNION)
@@ -59,15 +61,20 @@ def test_embedding_and_qa_query():
     # )
     
 def test_retrieve_source():
+    # given a dataset embedded
+    # embed_dataset(COL_OPEN_MINDFULNESS)
+    
     # given a source id
     id="3.1.01.01"
+    # id="31-pl"
     
     # when I retrieve the source
     doc = get_doc_by_id(id)
+    # doc = get_doc_by_id(id,collection_name=COL_STATE_OF_THE_UNION)
     
     # Then I get all its contents and metadata
     assert doc is not None
-    
+    logger.info(doc)
     assert doc['metadata']['page_title'] == "PREMIERE ETAPE\nLA PRESENCE ATTENTIVE AU CORPS"
     
-    
+  
