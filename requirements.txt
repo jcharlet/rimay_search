@@ -15,3 +15,6 @@ openai
 chromadb
 beautifulsoup4
 tqdm
+
+# external requirements for UI
+streamlit
