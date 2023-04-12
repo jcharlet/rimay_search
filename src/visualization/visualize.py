@@ -1,3 +1,4 @@
+from ast import List
 import streamlit as st
 from src.models.predict_model import (
     run_query_with_qa_with_sources,
@@ -96,7 +97,7 @@ def run_query(
     return answer, sources, metadata, sources_json
 
 
-def format_sources(sources_json, mocked, collection_name):
+def format_sources(sources_json, mocked, collection_name)-> list[str]:
     sources_markdown = ""
     if collection_name == COL_STATE_OF_THE_UNION:
         for source in sources_json:
@@ -121,18 +122,16 @@ def format_sources(sources_json, mocked, collection_name):
                 title = f"Chapitre {metadata['sort_chapter']}"
                 if metadata["sort_section_nb"] != 0:
                     title += f" Étape {metadata['sort_step_nb']}"
-
+                if metadata["page_title"] != "":
+                    title += f": {metadata['page_title']}"
+                    
                 doc = {"title": title}
 
                 doc["contents"] = f"{source['document']}"
 
             documents[url] = doc
 
-        for url in documents:
-            sources_markdown += f"""#### [{documents[url]["title"]}]({url})
-{documents[url]["contents"]}
-"""
-    return sources_markdown
+    return documents
 
 
 def make_grid(cols, rows):
@@ -192,13 +191,20 @@ def main():
         st.markdown(answer)
         st.header("Sources")
         tab1, tab2 = st.tabs(["Formatted text", "data"])
-        tab1.markdown(sources)
+        # tab1.markdown(sources)
+        for url in sources:
+            with tab1.expander(sources[url]["title"]):
+                st.markdown(f"[{url}]({url})")
+                st.markdown(sources[url]["contents"])
         tab2.json(sources_json)
         st.header("Metadata")
         for k, v in metadata.items():
             # st.subheader(k)
             grid = make_grid(1, len(v.items()))
             for index, (k2, v2) in enumerate(v.items()):
+                # if v2 is str and starts with $, then format it as a currency
+                if isinstance(v2, str) and '$' in v2:
+                    v2 = f"${float(v2.replace('$', '')):.2f}"
                 grid[0][index].metric(k2, v2)
 
 

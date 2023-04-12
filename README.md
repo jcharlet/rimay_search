@@ -6,7 +6,7 @@ search over Rimay teachings using natural language
 
 TODO
 ------------
-- [ ] collect data
+- [X] collect data
     - [x] scrap website
     - [x] clean data (balanced articles in text length)
 - [ ] build qa search
@@ -20,28 +20,36 @@ TODO
       - [x] increase response size on demand
       - [X] track cost
       - [X] get url, chapter and everything from source returned into chromadb
-      - [ ] make sure to respond in the expected language (French)
-      - [ ] break down texts longer than 1200 tokens: 
+      - [X] add title in response
+    - [ ] make sure to respond in the expected language (French)
+    - [ ] break down texts longer than 1200 tokens so that we can get further details from chapter 1-2
     - [ ] running on whole dataset
         - [ ] evaluation
 - [ ] build UI
     - [X] build it with streamlit
       - [X] introduction to service
       - [X] input text to run query
-      - [ ] show response
+      - [X] show response
         - [X] model answer
-        - [ ][HIGH] links to sources
-        - [ ][HIGH] metadata
+        - [X][HIGH] links to sources
+        - [X][HIGH] metadata
         - [X] query debug info and cost
       - [ ] additional 
-        - [ ] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
+        - [X] format cost display
+        - [ ] [HIGH] Rewrite interface in French
+        - [ ] [HIGH] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
         - [ ] response length
-        - [ ] add openapi 
-    - [ ] deploy on hugging face spaces
+        - [ ] [HIGH] add openapi token
+    - [ ] [HIGH] deploy on hugging face spaces
   - [ ] FIX CLI CLICK not working with unit tests
 - [ ] evaluate
 - [ ] write article 
 
+Potential next steps
+------------
+- [ ] Provide dedicated examples for reader model in the prompt, adapted to the text length requested (using open mindfulness FAQ)
+- [ ] train reader model on open mindfulness contents?
+- [ ] experiment with different sizes of articles (smaller) 
 
 Documentation
 ------------
