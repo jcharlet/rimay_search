@@ -266,9 +266,11 @@ def run_query_with_qa_with_sources(
         )
 
         answer = response["answer"]
-        
+
         sources = list(sorted(response["sources"].split(", ")))
-        sources = [get_doc_by_id(source, collection_name=collection_name) for source in sources]
+        sources = [
+            get_doc_by_id(source, collection_name=collection_name) for source in sources
+        ]
         metadata = {
             "cost": {
                 "Total Cost (USD)": cb.total_cost,
