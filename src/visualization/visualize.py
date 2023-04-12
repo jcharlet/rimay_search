@@ -78,7 +78,7 @@ def run_query(
         ]
         metadata = {
             "cost": {
-                "Total Cost (USD)": "$0.05708",
+                "Total Cost (USD)": 0.05708,
                 "Successful Requests": 2,
             },
             "tokens": {
@@ -202,9 +202,8 @@ def main():
             # st.subheader(k)
             grid = make_grid(1, len(v.items()))
             for index, (k2, v2) in enumerate(v.items()):
-                # if v2 is str and starts with $, then format it as a currency
-                if isinstance(v2, str) and '$' in v2:
-                    v2 = f"${float(v2.replace('$', '')):.2f}"
+                if k2 == 'Total Cost (USD)':
+                    v2 = f"${v2:.2f}"
                 grid[0][index].metric(k2, v2)
 
 

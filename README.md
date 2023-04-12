@@ -9,7 +9,7 @@ TODO
 - [X] collect data
     - [x] scrap website
     - [x] clean data (balanced articles in text length)
-- [ ] build qa search
+- [X] build qa search
     - [x] prototype
     - [x] applied to sample
     - [x] debug
@@ -21,11 +21,11 @@ TODO
       - [X] track cost
       - [X] get url, chapter and everything from source returned into chromadb
       - [X] add title in response
+    - [X] running on whole dataset
     - [ ] make sure to respond in the expected language (French)
     - [ ] break down texts longer than 1200 tokens so that we can get further details from chapter 1-2
-    - [ ] running on whole dataset
-        - [ ] evaluation
-- [ ] build UI
+  - [ ] FIX CLI CLICK not working with unit tests
+- [X] build UI
     - [X] build it with streamlit
       - [X] introduction to service
       - [X] input text to run query
@@ -39,10 +39,15 @@ TODO
         - [ ] [HIGH] Rewrite interface in French
         - [ ] [HIGH] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
         - [ ] response length
-        - [ ] [HIGH] add openapi token
-    - [ ] [HIGH] deploy on hugging face spaces
-  - [ ] FIX CLI CLICK not working with unit tests
-- [ ] evaluate
+        - [ ] [HIGH] add openapi token, hidden as password
+        - [ ] [HIGH] improve UI: admin vs normal yogi user (hide sidebar, json, token metadata details)
+- [ ] [HIGH] deploy
+  - [ ] [HIGH] manage db on distant server 
+    - [ ] explore hugging face spaces
+    - [ ] share data folder on git repo? 
+    - [ ] or enable to run embedding on server? (probably not)
+  - [ ] [HIGH] deploy on hugging face spaces
+- [ ] share and evaluate with karma ling
 - [ ] write article 
 
 Potential next steps
@@ -50,6 +55,10 @@ Potential next steps
 - [ ] Provide dedicated examples for reader model in the prompt, adapted to the text length requested (using open mindfulness FAQ)
 - [ ] train reader model on open mindfulness contents?
 - [ ] experiment with different sizes of articles (smaller) 
+- [ ] setup feedback collection
+  - [ ] good / bad answer
+  - [ ] better manual response - to finetune later
+- [ ] setup logs collection (stacktrace) 
 
 Documentation
 ------------
