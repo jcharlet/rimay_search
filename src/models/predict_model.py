@@ -2,7 +2,6 @@ import os
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
-from langchain.docstore.document import Document
 from chromadb.config import Settings
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain import OpenAI
@@ -36,7 +35,10 @@ logger = logging.getLogger(__name__)
 def cli():
     pass
 
+
 embeddings = None
+
+
 def get_embeddings():  # sourcery skip: raise-specific-error
     global embeddings
     openai_api_key = os.environ.get("OPENAI_API_KEY")
@@ -52,9 +54,11 @@ def get_embeddings():  # sourcery skip: raise-specific-error
 
     return embeddings
 
+
 def remove_embeddings():
     global embeddings
     embeddings = None
+
 
 def _embed_dataset(
     collection_name: str,
@@ -189,7 +193,7 @@ def get_doc_by_id(id: str, collection_name: str = COL_OPEN_MINDFULNESS) -> dict:
 
 def run_similarity_search(
     query: str, collection_name: str = COL_OPEN_MINDFULNESS
-) -> list[Document]:
+) -> list[dict]:
     """run similarity search with openai embeddings
 
     Args:
@@ -197,7 +201,7 @@ def run_similarity_search(
         collection_name (str): chromadb collection name to query
 
     Returns:
-        List[Document]: List of documents most similar to the query text.
+        List[dict]: List of documents most similar to the query text.
     """
     logger.info(
         f"Embedding dataset with openai embeddings on collection {collection_name}"
@@ -210,7 +214,9 @@ def run_similarity_search(
 
     response = collection.similarity_search(query, k=4)
     logger.info(response)
-    return response
+    return [
+        {"page_content": doc.page_content, "metadata": doc.metadata} for doc in response
+    ]
 
 
 @unique

@@ -23,7 +23,7 @@ def test_similarity_search_on_state_of_the_union():
     
     # Then I expect the correct paragraph to be returned
     top_doc = response[0]
-    assert top_doc.metadata['source'] == '31-pl', "expected source found"
+    assert top_doc['metadata']['source'] == '31-pl', "expected source found"
 
 def test_run_query_with_qa_with_sources_on_state_of_the_union():
     # given a dataset embedded

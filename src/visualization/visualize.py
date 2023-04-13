@@ -6,7 +6,7 @@ from src.models.predict_model import (
     COL_STATE_OF_THE_UNION,
     COL_OPEN_MINDFULNESS,
     ResponseSize,
-    remove_embeddings
+    remove_embeddings,
 )
 
 
@@ -103,8 +103,11 @@ def format_sources(sources_json, mocked, collection_name) -> list[str]:
     sources_markdown = ""
     if collection_name == COL_STATE_OF_THE_UNION:
         for source in sources_json:
-            documents[source['id']] = {"title": source['id'], "contents": f"{source['document']}"}
-            
+            documents[source["id"]] = {
+                "title": source["id"],
+                "contents": f"{source['document']}",
+            }
+
     elif mocked or collection_name == COL_OPEN_MINDFULNESS:
         for source in sources_json:
             metadata = source["metadata"]
@@ -140,16 +143,20 @@ def make_grid(cols, rows):
 # Define main function for Streamlit app
 def main():
     st.title("Moteur de recherche - pleine présence")
-    st.write("Ce moteur de recherche vous permet de trouver des réponses à vos questions sur la pleine présence.")
-    st.write("Il utilise les contenus du site [Open Mindfulness](https://www.openmindfulness.net/).")
+    st.write(
+        "Ce moteur de recherche vous permet de trouver des réponses à vos questions sur la pleine présence."
+    )
+    st.write(
+        "Il utilise les contenus du site [Open Mindfulness](https://www.openmindfulness.net/)."
+    )
     st.divider()
     user_type = st.sidebar.selectbox("Type d'utilisateur", ["yogi", "admin"])
-    if user_type=="yogi":
+    if user_type == "yogi":
         is_mocked = False
         # is_mocked = True
         collection_name = COL_OPEN_MINDFULNESS
         response_size = ResponseSize.SMALL
-        
+
         openai_token = st.sidebar.text_input("OpenAPI Token", type="password")
     else:
         st.sidebar.title("Settings")
@@ -157,7 +164,7 @@ def main():
         # # Add language selector to sidebar
         # language = st.sidebar.selectbox("Language", ["English", "French"])
         is_mocked = st.sidebar.selectbox("is mocked", [True, False])
-        
+
         if is_mocked:
             collection_name = COL_OPEN_MINDFULNESS
             response_size = ResponseSize.SMALL
@@ -165,7 +172,7 @@ def main():
             openai_token = st.sidebar.text_input("OpenAPI Token", type="password")
             if openai_token != "":
                 os.environ["OPENAI_API_KEY"] = openai_token
-            
+
                 collection_name = st.sidebar.selectbox(
                     "Collection name", [COL_OPEN_MINDFULNESS, COL_STATE_OF_THE_UNION]
                 )
@@ -175,12 +182,15 @@ def main():
                 )
 
     if not is_mocked and openai_token == "":
-        st.info("Veuillez pour commencer fournir une clé OpenAI dans le menu de gauche pour lancer une requête. Voir ce [tuto](https://www.commentcoder.com/api-chatgpt/#comment-avoir-sa-cl%C3%A9-dapi-chatgpt-).")
+        st.info(
+            "Veuillez pour commencer fournir une clé OpenAI dans le menu de gauche pour lancer une requête. Voir ce [tuto](https://www.commentcoder.com/api-chatgpt/#comment-avoir-sa-cl%C3%A9-dapi-chatgpt-)."
+        )
         remove_embeddings()
     else:
         if collection_name == COL_STATE_OF_THE_UNION:
             query = st.text_input(
-                "Enter your query here", "What did the president say about Justice Breyer ?"
+                "Enter your query here",
+                "What did the president say about Justice Breyer ?",
             )
         elif collection_name == COL_OPEN_MINDFULNESS:
             query = st.text_input(
@@ -210,9 +220,9 @@ def main():
                 # st.subheader(k)
                 grid = make_grid(1, len(v.items()))
                 for index, (k2, v2) in enumerate(v.items()):
-                    if k2 == 'Total Cost (USD)':
+                    if k2 == "Total Cost (USD)":
                         v2 = f"${v2:.2f}"
-                    elif user_type=="yogi":
+                    elif user_type == "yogi":
                         break
                     grid[0][index].metric(k2, v2)
 
