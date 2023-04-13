@@ -19,47 +19,54 @@ search over Rimay teachings using natural language
 
 TODO
 ------------
-- [X] collect data
-    - [x] scrap website
-    - [x] clean data (balanced articles in text length)
-- [X] build qa search
-    - [x] prototype
-    - [x] applied to sample
-    - [x] debug
-      - [x] texts too long: need samples of max 1200 chars to follow openai
-      This model's maximum context length is 4097 tokens, however you requested 9779 tokens (9523 in your prompt; 256 for the completion). Please reduce your prompt; or completion length
-        - [NO] either reduce text size to 1200 chars as in langchain prompt (while I have a series of texts with 600 - 1200 tokens)
-        - [x] or change architecture: QA to every match and combine, rather than QA on all matches in 1 prompt: map_reduce and map_ranks
-      - [x] increase response size on demand
-      - [X] track cost
-      - [X] get url, chapter and everything from source returned into chromadb
-      - [X] add title in response
-    - [X] running on whole dataset
-    - [ ] make sure to respond in the expected language (French)
-    - [ ] break down texts longer than 1200 tokens so that we can get further details from chapter 1-2
-  - [ ] FIX CLI CLICK not working with unit tests
-- [X] build UI
-    - [X] build it with streamlit
-      - [X] introduction to service
-      - [X] input text to run query
-      - [X] show response
-        - [X] model answer
-        - [X][HIGH] links to sources
-        - [X][HIGH] metadata
-        - [X] query debug info and cost
-      - [ ] additional 
-        - [X] format cost display
-        - [X] add openapi token, hidden as password
-        - [X] improve UI: admin vs normal yogi user (hide sidebar, json, token metadata details)
-          - [X] Rewrite interface in French  
-        - [ ] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
-        - [ ] response length
-- [ ] [HIGH] deploy
-  - [ ] [HIGH] manage db on distant server 
-    - [ ] explore hugging face spaces
-    - [ ] share data folder on git repo? 
-    - [ ] or enable to run embedding on server? (probably not)
-  - [ ] [HIGH] deploy on hugging face spaces
+
+### Data preparation
+  - [x] scrap website
+  - [x] clean data (balanced articles in text length)
+
+### Build search engine
+  - [x] prototype
+  - [x] applied to sample
+  - [x] debug
+    - [x] texts too long: need samples of max 1200 chars to follow openai
+    This model's maximum context length is 4097 tokens, however you requested 9779 tokens (9523 in your prompt; 256 for the completion). Please reduce your prompt; or completion length
+      - [NO] either reduce text size to 1200 chars as in langchain prompt (while I have a series of texts with 600 - 1200 tokens)
+      - [x] or change architecture: QA to every match and combine, rather than QA on all matches in 1 prompt: map_reduce and map_ranks
+    - [x] increase response size on demand
+    - [X] track cost
+    - [X] get url, chapter and everything from source returned into chromadb
+    - [X] add title in response
+  - [X] running on whole dataset
+  - [ ] make sure to respond in the expected language (French)
+  - [ ] [HIGH] break down texts longer than 1200 tokens so that we can get further details from chapter 1-2
+  à quoi servent les sciences contemplatives? -> This model's maximum context length is 4097 tokens, however you requested 8818 tokens (8562 in your prompt; 256 for the completion).
+- [ ] FIX CLI CLICK not working with unit tests
+
+### Build UI with streamlit
+  - [X] build it with streamlit
+    - [X] introduction to service
+    - [X] input text to run query
+    - [X] show response
+      - [X] model answer
+      - [X] links to sources
+      - [X] metadata
+      - [X] query debug info and cost
+    - [ ] additional 
+      - [X] format cost display
+      - [X] add openapi token, hidden as password
+      - [X] improve UI: admin vs normal yogi user (hide sidebar, json, token metadata details)
+        - [X] Rewrite interface in French  
+      - [ ] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
+      - [ ] response length
+
+### Deploy app
+- [X] manage db on distant server 
+  - [X] explore hugging face spaces
+  - [X] share data folder on git repo? 
+  - [ ] or enable to run embedding on server? (probably not)
+- [X] deploy on hugging face spaces
+
+### Evaluate, share
 - [ ] share and evaluate with karma ling
 - [ ] write article 
 
