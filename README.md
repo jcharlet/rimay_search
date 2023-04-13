@@ -36,11 +36,11 @@ TODO
         - [X] query debug info and cost
       - [ ] additional 
         - [X] format cost display
-        - [ ] [HIGH] Rewrite interface in French
-        - [ ] [HIGH] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
-        - [ ] response length
-        - [ ] [HIGH] add openapi token, hidden as password
+        - [X] add openapi token, hidden as password
         - [ ] [HIGH] improve UI: admin vs normal yogi user (hide sidebar, json, token metadata details)
+          - [ ] [HIGH] Rewrite interface in French  
+        - [ ] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
+        - [ ] response length
 - [ ] [HIGH] deploy
   - [ ] [HIGH] manage db on distant server 
     - [ ] explore hugging face spaces

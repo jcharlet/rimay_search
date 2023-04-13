@@ -1,4 +1,5 @@
 from ast import List
+import os
 import streamlit as st
 from src.models.predict_model import (
     run_query_with_qa_with_sources,
@@ -16,8 +17,7 @@ def run_query(
     response_size=ResponseSize.MEDIUM,
 ):
     if mocked:
-        answer = """The president said "Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service." """
-        # sources_json = [{'id': '31-pl', 'document': 'Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections. \n\nTonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service. \n\nOne of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court. \n\nAnd I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.', 'metadata': {'source': '31-pl'}}]
+        answer = """La méthode en trois temps pour intégrer ses émotions consiste à reconnaître et accueillir la présence de l'émotion, à respirer avec et à répondre harmonieusement en état d'observateur abstrait."""
         sources_json = [
             {
                 "id": "3.5.20.01",
@@ -78,13 +78,13 @@ def run_query(
         ]
         metadata = {
             "cost": {
-                "Total Cost (USD)": 0.05708,
+                "Total Cost (USD)": 0.23,
                 "Successful Requests": 2,
             },
             "tokens": {
-                "Total Tokens": 2854,
-                "Prompt Tokens": 2688,
-                "Completion Tokens": 166,
+                "Total Tokens": 11618,
+                "Prompt Tokens": 10650,
+                "Completion Tokens": 968,
             },
         }
     else:
@@ -97,18 +97,14 @@ def run_query(
     return answer, sources, metadata, sources_json
 
 
-def format_sources(sources_json, mocked, collection_name)-> list[str]:
+def format_sources(sources_json, mocked, collection_name) -> list[str]:
+    documents = {}
     sources_markdown = ""
     if collection_name == COL_STATE_OF_THE_UNION:
         for source in sources_json:
-            sources_markdown += f"""#### {source['id']}
-{source['document']}
-"""
+            documents[source['id']] = {"title": source['id'], "contents": f"{source['document']}"}
+            
     elif mocked or collection_name == COL_OPEN_MINDFULNESS:
-        # group documents in sources_jon by url from sources["url"], and display for each group the page title from sources["page_title"] and url
-
-        visited_urls = []
-        documents = {}
         for source in sources_json:
             metadata = source["metadata"]
             url = metadata["url"]
@@ -124,10 +120,8 @@ def format_sources(sources_json, mocked, collection_name)-> list[str]:
                     title += f" Étape {metadata['sort_step_nb']}"
                 if metadata["page_title"] != "":
                     title += f": {metadata['page_title']}"
-                    
-                doc = {"title": title}
 
-                doc["contents"] = f"{source['document']}"
+                doc = {"title": title, "contents": f"{source['document']}"}
 
             documents[url] = doc
 
@@ -153,58 +147,61 @@ def main():
     # # Add language selector to sidebar
     # language = st.sidebar.selectbox("Language", ["English", "French"])
     is_mocked = st.sidebar.selectbox("is mocked", [True, False])
+    
     if is_mocked:
         collection_name = COL_OPEN_MINDFULNESS
         response_size = ResponseSize.SMALL
     else:
-        collection_name = st.sidebar.selectbox(
-            "Collection name", [COL_OPEN_MINDFULNESS, COL_STATE_OF_THE_UNION]
-        )
-        response_size = st.sidebar.selectbox(
-            "Response size",
-            [ResponseSize.SMALL, ResponseSize.MEDIUM, ResponseSize.LARGE],
-        )
+        openai_token = st.sidebar.text_input("OpenAPI Token", type="password")
+        if openai_token != "":
+            os.environ["OPENAI_API_KEY"] = openai_token
+        
+            collection_name = st.sidebar.selectbox(
+                "Collection name", [COL_OPEN_MINDFULNESS, COL_STATE_OF_THE_UNION]
+            )
+            response_size = st.sidebar.selectbox(
+                "Response size",
+                [ResponseSize.SMALL, ResponseSize.MEDIUM, ResponseSize.LARGE],
+            )
 
-    # # Add text input for OpenAPI token to sidebar
-    # token = st.sidebar.text_input("OpenAPI Token")
+    if not is_mocked and openai_token == "":
+        st.info("Please enter your OpenAI API key to run queries")
+    else:
+        if collection_name == COL_STATE_OF_THE_UNION:
+            query = st.text_input(
+                "Enter your query here", "What did the president say about Justice Breyer ?"
+            )
+        elif collection_name == COL_OPEN_MINDFULNESS:
+            query = st.text_input(
+                "Enter your query here",
+                "Comment intégrer ses émotions avec la méthode en trois temps ?",
+            )
 
-    # Add text input and button for user to enter query
-    # query = st.text_input("Enter your query here", "Comment intégrer ses émotions avec la méthode en trois temps ?")
-    if collection_name == COL_STATE_OF_THE_UNION:
-        query = st.text_input(
-            "Enter your query here", "What did the president say about Justice Breyer ?"
-        )
-    elif collection_name == COL_OPEN_MINDFULNESS:
-        query = st.text_input(
-            "Enter your query here",
-            "Comment intégrer ses émotions avec la méthode en trois temps ?",
-        )
-
-    if st.button("Run Query") and query != "":
-        answer, sources, metadata, sources_json = run_query(
-            query,
-            mocked=is_mocked,
-            collection_name=collection_name,
-            response_size=response_size,
-        )
-        st.header("Answer")
-        st.markdown(answer)
-        st.header("Sources")
-        tab1, tab2 = st.tabs(["Formatted text", "data"])
-        # tab1.markdown(sources)
-        for url in sources:
-            with tab1.expander(sources[url]["title"]):
-                st.markdown(f"[{url}]({url})")
-                st.markdown(sources[url]["contents"])
-        tab2.json(sources_json)
-        st.header("Metadata")
-        for k, v in metadata.items():
-            # st.subheader(k)
-            grid = make_grid(1, len(v.items()))
-            for index, (k2, v2) in enumerate(v.items()):
-                if k2 == 'Total Cost (USD)':
-                    v2 = f"${v2:.2f}"
-                grid[0][index].metric(k2, v2)
+        if st.button("Run Query") and query != "":
+            answer, sources, metadata, sources_json = run_query(
+                query,
+                mocked=is_mocked,
+                collection_name=collection_name,
+                response_size=response_size,
+            )
+            st.header("Answer")
+            st.markdown(answer)
+            st.header("Sources")
+            tab1, tab2 = st.tabs(["Formatted text", "data"])
+            # tab1.markdown(sources)
+            for url in sources:
+                with tab1.expander(sources[url]["title"]):
+                    st.markdown(f"[{url}]({url})")
+                    st.markdown(sources[url]["contents"])
+            tab2.json(sources_json)
+            st.header("Metadata")
+            for k, v in metadata.items():
+                # st.subheader(k)
+                grid = make_grid(1, len(v.items()))
+                for index, (k2, v2) in enumerate(v.items()):
+                    if k2 == 'Total Cost (USD)':
+                        v2 = f"${v2:.2f}"
+                    grid[0][index].metric(k2, v2)
 
 
 # Run main function

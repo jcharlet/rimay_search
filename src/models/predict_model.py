@@ -1,3 +1,4 @@
+import os
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
@@ -22,7 +23,6 @@ COL_OPEN_MINDFULNESS = "openmindfulness_contents"
 
 project_dir = Path(__file__).resolve().parents[2]
 
-embeddings = OpenAIEmbeddings()
 persist_directory = f"{project_dir}/data/.chromadb"
 client_settings = Settings(
     chroma_db_impl="duckdb+parquet",
@@ -36,6 +36,21 @@ logger = logging.getLogger(__name__)
 def cli():
     pass
 
+embeddings = None
+def get_embeddings():  # sourcery skip: raise-specific-error
+    global embeddings
+    openai_api_key = os.environ.get("OPENAI_API_KEY")
+    if openai_api_key is None or openai_api_key == "":
+        logger.warn("No OpenAI API key found")
+        raise Exception("No OpenAI API key found")
+    else:
+        try:
+            if embeddings is None:
+                embeddings = OpenAIEmbeddings()
+        except Exception:
+            embeddings = OpenAIEmbeddings()
+
+    return embeddings
 
 def _embed_dataset(
     collection_name: str,
@@ -77,7 +92,7 @@ def _embed_dataset(
         # Create new collection.
         collection = Chroma.from_texts(
             texts,
-            embeddings,
+            get_embeddings(),
             metadatas=metadatas,
             ids=ids,
             client_settings=client_settings,
@@ -152,7 +167,7 @@ def get_doc_by_id(id: str, collection_name: str = COL_OPEN_MINDFULNESS) -> dict:
     """
     collection = Chroma(
         collection_name=collection_name,
-        embedding_function=embeddings,
+        embedding_function=get_embeddings(),
         client_settings=client_settings,
     )
     results = collection._collection.get(id)
@@ -185,7 +200,7 @@ def run_similarity_search(
     )
     collection = Chroma(
         collection_name=collection_name,
-        embedding_function=embeddings,
+        embedding_function=get_embeddings(),
         client_settings=client_settings,
     )
 
@@ -242,7 +257,7 @@ def run_query_with_qa_with_sources(
 
     docsearch = Chroma(
         collection_name=collection_name,
-        embedding_function=embeddings,
+        embedding_function=get_embeddings(),
         client_settings=client_settings,
     )
     max_response_tokens, max_tokens_limit_for_chain = get_tokens_limits(response_size)
