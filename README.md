@@ -3,9 +3,8 @@ title: Rimay Search
 emoji: 🧘
 colorFrom: red
 colorTo: blue
-sdk: streamlit
-sdk_version: 1.17.0
-app_file: src/visualization/visualize.py
+sdk: docker
+app_port: 7860
 pinned: false
 license: mit
 ---
