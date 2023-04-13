@@ -6,6 +6,7 @@ from src.models.predict_model import (
     COL_STATE_OF_THE_UNION,
     COL_OPEN_MINDFULNESS,
     ResponseSize,
+    remove_embeddings
 )
 
 
@@ -138,34 +139,44 @@ def make_grid(cols, rows):
 
 # Define main function for Streamlit app
 def main():
-    st.title("OpenMindfulness Query App")
-
-    language = ""
-    token = ""
-    st.sidebar.title("Settings")
-
-    # # Add language selector to sidebar
-    # language = st.sidebar.selectbox("Language", ["English", "French"])
-    is_mocked = st.sidebar.selectbox("is mocked", [True, False])
-    
-    if is_mocked:
+    st.title("Moteur de recherche - pleine présence")
+    st.write("Ce moteur de recherche vous permet de trouver des réponses à vos questions sur la pleine présence.")
+    st.write("Il utilise les contenus du site [Open Mindfulness](https://www.openmindfulness.net/).")
+    st.divider()
+    user_type = st.sidebar.selectbox("Type d'utilisateur", ["yogi", "admin"])
+    if user_type=="yogi":
+        is_mocked = False
+        # is_mocked = True
         collection_name = COL_OPEN_MINDFULNESS
         response_size = ResponseSize.SMALL
-    else:
-        openai_token = st.sidebar.text_input("OpenAPI Token", type="password")
-        if openai_token != "":
-            os.environ["OPENAI_API_KEY"] = openai_token
         
-            collection_name = st.sidebar.selectbox(
-                "Collection name", [COL_OPEN_MINDFULNESS, COL_STATE_OF_THE_UNION]
-            )
-            response_size = st.sidebar.selectbox(
-                "Response size",
-                [ResponseSize.SMALL, ResponseSize.MEDIUM, ResponseSize.LARGE],
-            )
+        openai_token = st.sidebar.text_input("OpenAPI Token", type="password")
+    else:
+        st.sidebar.title("Settings")
+
+        # # Add language selector to sidebar
+        # language = st.sidebar.selectbox("Language", ["English", "French"])
+        is_mocked = st.sidebar.selectbox("is mocked", [True, False])
+        
+        if is_mocked:
+            collection_name = COL_OPEN_MINDFULNESS
+            response_size = ResponseSize.SMALL
+        else:
+            openai_token = st.sidebar.text_input("OpenAPI Token", type="password")
+            if openai_token != "":
+                os.environ["OPENAI_API_KEY"] = openai_token
+            
+                collection_name = st.sidebar.selectbox(
+                    "Collection name", [COL_OPEN_MINDFULNESS, COL_STATE_OF_THE_UNION]
+                )
+                response_size = st.sidebar.selectbox(
+                    "Response size",
+                    [ResponseSize.SMALL, ResponseSize.MEDIUM, ResponseSize.LARGE],
+                )
 
     if not is_mocked and openai_token == "":
-        st.info("Please enter your OpenAI API key to run queries")
+        st.info("Veuillez pour commencer fournir une clé OpenAI dans le menu de gauche pour lancer une requête. Voir ce [tuto](https://www.commentcoder.com/api-chatgpt/#comment-avoir-sa-cl%C3%A9-dapi-chatgpt-).")
+        remove_embeddings()
     else:
         if collection_name == COL_STATE_OF_THE_UNION:
             query = st.text_input(
@@ -173,21 +184,21 @@ def main():
             )
         elif collection_name == COL_OPEN_MINDFULNESS:
             query = st.text_input(
-                "Enter your query here",
+                "Entrez votre requête ci-dessous",
                 "Comment intégrer ses émotions avec la méthode en trois temps ?",
             )
 
-        if st.button("Run Query") and query != "":
+        if st.button("🔍 Recherche") and query != "":
             answer, sources, metadata, sources_json = run_query(
                 query,
                 mocked=is_mocked,
                 collection_name=collection_name,
                 response_size=response_size,
             )
-            st.header("Answer")
+            st.header("Réponse")
             st.markdown(answer)
             st.header("Sources")
-            tab1, tab2 = st.tabs(["Formatted text", "data"])
+            tab1, tab2 = st.tabs(["Sources", "data"])
             # tab1.markdown(sources)
             for url in sources:
                 with tab1.expander(sources[url]["title"]):
@@ -201,6 +212,8 @@ def main():
                 for index, (k2, v2) in enumerate(v.items()):
                     if k2 == 'Total Cost (USD)':
                         v2 = f"${v2:.2f}"
+                    elif user_type=="yogi":
+                        break
                     grid[0][index].metric(k2, v2)
 
 

@@ -52,6 +52,10 @@ def get_embeddings():  # sourcery skip: raise-specific-error
 
     return embeddings
 
+def remove_embeddings():
+    global embeddings
+    embeddings = None
+
 def _embed_dataset(
     collection_name: str,
     texts: List[str],

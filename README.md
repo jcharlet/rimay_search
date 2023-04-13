@@ -37,8 +37,8 @@ TODO
       - [ ] additional 
         - [X] format cost display
         - [X] add openapi token, hidden as password
-        - [ ] [HIGH] improve UI: admin vs normal yogi user (hide sidebar, json, token metadata details)
-          - [ ] [HIGH] Rewrite interface in French  
+        - [X] improve UI: admin vs normal yogi user (hide sidebar, json, token metadata details)
+          - [X] Rewrite interface in French  
         - [ ] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
         - [ ] response length
 - [ ] [HIGH] deploy
