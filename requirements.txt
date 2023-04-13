@@ -15,6 +15,7 @@ openai
 chromadb
 beautifulsoup4
 tqdm
+tiktoken
 
 # external requirements for UI
 streamlit
