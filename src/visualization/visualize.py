@@ -171,8 +171,6 @@ def main():
         else:
             openai_token = st.sidebar.text_input("OpenAPI Token", type="password")
             if openai_token != "":
-                os.environ["OPENAI_API_KEY"] = openai_token
-
                 collection_name = st.sidebar.selectbox(
                     "Collection name", [COL_OPEN_MINDFULNESS, COL_STATE_OF_THE_UNION]
                 )
@@ -181,6 +179,9 @@ def main():
                     [ResponseSize.SMALL, ResponseSize.MEDIUM, ResponseSize.LARGE],
                 )
 
+    if not is_mocked and openai_token != "":
+        os.environ["OPENAI_API_KEY"] = openai_token
+        
     if not is_mocked and openai_token == "":
         st.info(
             "Veuillez pour commencer fournir une clé OpenAI dans le menu de gauche pour lancer une requête. Voir ce [tuto](https://www.commentcoder.com/api-chatgpt/#comment-avoir-sa-cl%C3%A9-dapi-chatgpt-)."
