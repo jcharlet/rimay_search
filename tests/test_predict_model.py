@@ -37,7 +37,9 @@ def test_run_query_with_qa_with_sources_on_state_of_the_union():
     # response = run_query_with_qa_with_sources(question, response_size=ResponseSize.LARGE, collection_name=COL_STATE_OF_THE_UNION)
     
     # then I expect the correct answer to be returned, using the right source
-    assert sources == '31-pl', "expected source found"
+    assert sources is not None
+    assert sources != []
+    assert sources[0]['metadata']['source'] == '31-pl', "expected source found"
     
     # cannot make an exact text comparison because the answer can vary - however it should like this:
     print(answer)
@@ -55,7 +57,10 @@ def test_embedding_and_qa_query():
 
     # then I expect the correct answer to be returned, using the right source
     print(answer)     # cannot make an exact text comparison because the answer can vary
-    assert '3.5.20.01' in sources, "expected source found"
+    assert sources is not None
+    assert sources != []
+    source_ids = [source['metadata']['source'] for source in sources]
+    assert '3.5.20.01' in source_ids, "expected source found"
     # assert list(sorted(sources.split(", "))) == sorted(
     #     ['3.5.20.01', '3.5.20.02', '3.5.24.01', '3.5.20.03']
     # )
