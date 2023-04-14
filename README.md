@@ -16,6 +16,21 @@ rimay_search
 
 search over Rimay teachings using natural language
 
+Explore on the [streamlit app](https://huggingface.co/spaces/jeremie/rimay_search)
+
+Documentation
+------------
+- Retrieval question answering with sources based on [langchain dedicated tutorial](https://python.langchain.com/en/latest/modules/chains/index_examples/vector_db_qa_with_sources.html)
+- Explanation of different kinds of chain (stuffing, map_reduce, refine, map_rerank), to deal with long queries to open_ai: in [langchain](https://python.langchain.com/en/latest/modules/chains/index_examples/qa_with_sources.html), but also in this [excellent video](https://www.youtube.com/watch?v=), and this [cookbook](https://github.com/gkamradt/langchain-tutorials/blob/main/LangChain%20Cookbook.ipynb). Here we are using map_reduce since the stuffing method, which tries to put all candidate documents in prompt to answer question, results in too long prompts for openai (over 4k) 
+- modifying prompts, from [langchain](https://python.langchain.com/en/latest/modules/prompts/prompt_templates/getting_started.html), to make sure it always responds in the requested language (when asking for long answers, it sometimes responds in English, since the prompt and examples given are in English)
+
+
+
+Setup
+------------
+You will need to create a .env file and put your openai token
+
+Warning: the tests are not mocked! So running some of those can be quickly costly - a qa search query on the state of the union costs 6cents, a qa search query on the open mindfulness contents can cost 40cents
 
 TODO
 ------------
@@ -23,6 +38,8 @@ TODO
 ### Data preparation
   - [x] scrap website
   - [x] clean data (balanced articles in text length)
+  - [ ] [HIGH] break down texts much longer than 1200 tokens so that we can get further details from chapter 1-2
+  à quoi servent les sciences contemplatives? -> This model's maximum context length is 4097 tokens, however you requested 8818 tokens (8562 in your prompt; 256 for the completion).
 
 ### Build search engine
   - [x] prototype
@@ -37,10 +54,9 @@ TODO
     - [X] get url, chapter and everything from source returned into chromadb
     - [X] add title in response
   - [X] running on whole dataset
-  - [ ] make sure to respond in the expected language (French)
-  - [ ] [HIGH] break down texts longer than 1200 tokens so that we can get further details from chapter 1-2
-  à quoi servent les sciences contemplatives? -> This model's maximum context length is 4097 tokens, however you requested 8818 tokens (8562 in your prompt; 256 for the completion).
+  - [ ] [HIGH] make sure to respond in the expected language (French)
 - [ ] FIX CLI CLICK not working with unit tests
+- [X] use cheaper model
 
 ### Build UI with streamlit
   - [X] build it with streamlit
@@ -57,7 +73,9 @@ TODO
       - [X] improve UI: admin vs normal yogi user (hide sidebar, json, token metadata details)
         - [X] Rewrite interface in French  
       - [ ] select language: French and English - https://blog.devgenius.io/how-to-build-a-multi-language-dashboard-with-streamlit-9bc087dd4243
-      - [ ] response length
+    - [ ] cleanup / refactor code (it's an ugly mess)
+    - [ ] [HIGH] add spinner wheel to wait for response
+
 
 ### Deploy app
 - [X] manage db on distant server 
@@ -80,19 +98,6 @@ Potential next steps
   - [ ] better manual response - to finetune later
 - [ ] setup logs collection (stacktrace) 
 
-Documentation
-------------
-- Retrieval question answering with sources based on [langchain dedicated tutorial](https://python.langchain.com/en/latest/modules/chains/index_examples/vector_db_qa_with_sources.html)
-- Explanation of different kinds of chain (stuffing, map_reduce, refine, map_rerank), to deal with long queries to open_ai: in [langchain](https://python.langchain.com/en/latest/modules/chains/index_examples/qa_with_sources.html), but also in this [excellent video](https://www.youtube.com/watch?v=), and this [cookbook](https://github.com/gkamradt/langchain-tutorials/blob/main/LangChain%20Cookbook.ipynb). Here we are using map_reduce since the stuffing method, which tries to put all candidate documents in prompt to answer question, results in too long prompts for openai (over 4k) 
-- modifying prompts, from [langchain](https://python.langchain.com/en/latest/modules/prompts/prompt_templates/getting_started.html), to make sure it always responds in the requested language (when asking for long answers, it sometimes responds in English, since the prompt and examples given are in English)
-
-
-
-Setup
-------------
-You will need to create a .env file and put your openai token
-
-Warning: the tests are not mocked! So running some of those can be quickly costly - a qa search query on the state of the union costs 6cents, a qa search query on the open mindfulness contents can cost 40cents
 
 ## debug streamlit with vscode
 add to launch.json

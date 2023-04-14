@@ -5,6 +5,7 @@ from langchain.vectorstores import Chroma
 from chromadb.config import Settings
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain import OpenAI
+from langchain.chat_models import ChatOpenAI
 import pandas as pd
 from dotenv import find_dotenv, load_dotenv
 from pathlib import Path
@@ -272,11 +273,26 @@ def run_query_with_qa_with_sources(
     )
     max_response_tokens, max_tokens_limit_for_chain = get_tokens_limits(response_size)
 
+    from langchain.prompts import load_prompt
+    from langchain.chains.qa_with_sources import load_qa_with_sources_chain
+
+    # prompt = load_prompt('lc://prompts/qa_with_sources/map_reduce/reduce/basic.json')
+    prompt = load_prompt(f"{project_dir}/src/models/config/prompt_qa_with_sources_mapreduce_FR.json")
+    # chain = load_qa_with_sources_chain('lc://chains/qa_with_sources/map_reduce.json')
+    
     chain = RetrievalQAWithSourcesChain.from_chain_type(
-        OpenAI(temperature=0, max_tokens=max_response_tokens),  # default 256
+        ChatOpenAI(model_name = "gpt-3.5-turbo", # 10 times cheaper than davinci
+        # OpenAI(model_name = "text-davinci-003",
+            temperature=0, 
+            max_tokens=max_response_tokens # default 256
+            ), 
+        
         # chain_type="stuff", # cannot work with large documents
         chain_type="map_reduce",  # runs a lot of queries under the hood..
         # chain_type="map_rerank", # does not provide sources
+        
+        chain_type_kwargs={"combine_prompt": prompt}, # use custom prompt to respond in French every time
+        
         retriever=docsearch.as_retriever(),
         # verbose=True,
         reduce_k_below_max_tokens=True,  # default False
@@ -291,8 +307,19 @@ def run_query_with_qa_with_sources(
         )
 
         answer = response["answer"]
-
-        sources = list(sorted(response["sources"].split(", ")))
+        # FIXME issue with openai response parsing when using french prompt - dirty workaround below
+        answer = answer.replace(u'\xa0', u' ') # non breaking latin1 space added with custom prompt
+        if "\nSOURCES : " in answer:
+            sources = answer.split("\nSOURCES : ")[1]
+            # trim last . if present in sources
+            sources = sources[:-1] if sources.endswith(".") else sources
+            
+            answer = answer.split("\nSOURCES : ")[0]
+        else:
+            sources = response["sources"]
+            
+        
+        sources = list(sorted(sources.split(", ")))
         sources = [
             get_doc_by_id(source, collection_name=collection_name) for source in sources
         ]
