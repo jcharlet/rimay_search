@@ -70,15 +70,39 @@ TODO
 - [ ] share and evaluate with karma ling
 - [ ] write article 
 
-Potential next steps
+Next steps
 ------------
-- [ ] Provide dedicated examples for reader model in the prompt, adapted to the text length requested (using open mindfulness FAQ)
-- [ ] train reader model on open mindfulness contents?
-- [ ] experiment with different sizes of articles (smaller) 
-- [ ] setup feedback collection
-  - [ ] good / bad answer
-  - [ ] better manual response - to finetune later
-- [ ] setup logs collection (stacktrace) 
+
+- [ ] Réduire le coût d'utilisation de l'application / la rendre plus rapide
+   - [ ] utiliser un modèle plus petit (chatgpt ?)
+     - [ ] changer de modèle
+     - [ ] Fournir des exemples dédiés pour le modèle de lecteur dans l'invite, adaptés à la longueur du texte demandé (en utilisant la FAQ sur la pleine conscience ouverte)
+   - [ ] Réduire la taille des documents
+     - [ ] corrige le chapitre 1-2
+     - [ ] Explorer la réduction des pages : décomposer les pages en paragraphes + inclure le résumé de la page / les métadonnées ?
+
+- [ ] Évaluer les réponses de l'application
+   - [ ] recueillir les questions/réponses
+   - [ ] collecte de commentaires sur la configuration
+     - [ ] bonne / mauvaise réponse
+     - [ ] meilleure réponse manuelle - pour affiner plus tard
+   - [ ] testez le modèle sur chacune de ces questions, évaluez les résultats, corrigez les résultats
+
+- [ ] Améliorer la qualité des réponses
+   - [ ] former le modèle de lecteur sur les contenus de pleine conscience ouverte ?
+   - [ ] testez différentes tailles d'articles (plus petits)
+
+- [ ] Industrialiser l'application
+   - [ ] Déploiement sur serveur dédié
+   - [ ] collecte des journaux de configuration (stacktrace)
+   - [ ] À DÉFINIR
+
+- [ ] Étendre la base de données de connaissances
+   - [ ] wiki bouddha -> voir avec Tchamé = 1 semaine
+   - [ ] questions réponses pendant les enseignements
+   - [ ] sources externes
+     - [ ] pages dédiées au bouddhisme/méditation sur wikipedia
+     - [ ] recherche Google
 
 Documentation
 ------------

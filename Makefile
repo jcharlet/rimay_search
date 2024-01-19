@@ -25,6 +25,7 @@ requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
 	# fix infinite loop with aws cli installation
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt --use-deprecated=legacy-resolver 
+	$(PYTHON_INTERPRETER) -m pip install -r requirements-dev.txt
 
 ## scrap website
 data: requirements
